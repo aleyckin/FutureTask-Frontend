@@ -1,0 +1,17 @@
+# Используем Node.js образ для разработки
+FROM node:20
+
+# Устанавливаем рабочую директорию
+WORKDIR /my-vue-app
+
+# Копируем package.json и package-lock.json для установки зависимостей
+COPY package*.json ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+# Экспонируем порт для доступа к серверу разработки Vue
+EXPOSE 8080
+
+# Запуск сервера разработки Vue
+CMD ["npm", "run", "serve"]
