@@ -5,7 +5,7 @@
         <div class="col-md-4" v-for="project in projects" :key="project.id">
           <div 
             class="card mb-4 shadow-sm" 
-            @click="goToProjectDetails(project.id)" 
+            @click="goToProjectPage(project.id)" 
             @mouseover="hovering = project.id" 
             @mouseleave="hovering = null"
             :class="{ 'hover-card': hovering === project.id }"
@@ -55,8 +55,8 @@
             return 'Unknown Role';
         }
       },
-      goToProjectDetails(projectId) {
-        this.$router.push({ name: 'ProjectDetails', params: { id: projectId } });
+      goToProjectPage(projectId) {
+        this.$router.push({ name: 'ProjectPage', params: { projectId: projectId } });
       },
     },
   };

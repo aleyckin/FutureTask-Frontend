@@ -27,8 +27,10 @@
 </template>
 
 <script>
+
 import DataService from '../service/DataService';
-import eventBus from '../eventBus'; // Импортируем eventBus
+import eventBus from '../eventBus';
+import { User } from '@/models/User';
 
 export default {
   data() {
@@ -45,12 +47,12 @@ export default {
       try {
         // Отправляем данные на сервер
         const response = await DataService.create('/users/login', this.loginForm);
-        
+        const user = new User(response.data.user);
         // Сохраняем токен в localStorage
-        localStorage.setItem('token', response.data);
-        localStorage.setItem('user', this.loginForm.email);
-        localStorage.setItem('role', 'Administrator');
-
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', user.email);
+        localStorage.setItem('role', this.setUserRole(user.userRole));
+        
         // Сообщаем о логине
         eventBus.emit('login'); // Emit the login event
 
@@ -59,11 +61,21 @@ export default {
       } catch (error) {
         // Если возникла ошибка, показываем сообщение об ошибке
         if (error.response && error.response.status === 401) {
-          this.errorMessage = 'Invalid email or password';
+          this.errorMessage = 'Неверные данные';
         } else {
-          this.errorMessage = 'An error occurred. Please try again later.';
+          this.errorMessage = 'Произошла ошибка. Попробуйте позже.';
         }
       }
+    },
+    setUserRole(roleNumber) {
+        switch (roleNumber) {
+            case 0:
+                return 'RegularUser';
+            case 1:
+                return 'Administrator';
+            default:
+                return 'Unknown';
+        }
     }
   }
 };

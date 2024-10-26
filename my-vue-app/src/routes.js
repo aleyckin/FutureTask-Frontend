@@ -1,8 +1,7 @@
-import column from './pages/ColumnList.vue'
 import user from "./pages/UserList.vue";
 import userAddModal from "./components/AddUserModal.vue";
-import task from "./pages/TaskList.vue";
-import project from "./pages/ProjectList.vue";
+import project from "./pages/ProjectPage.vue"
+import projects from "./pages/ProjectList.vue";
 import projectDetails from "./pages/ProjectDetails.vue"
 import projectForUser from "./pages/ProjectsForUser.vue"
 import specialization from "./pages/SpecializationList.vue";
@@ -12,9 +11,8 @@ import Error from "./pages/ErrorPage.vue";
 import {createRouter, createWebHistory} from "vue-router"
 
 const routes = [
-    {path: '/tasks', component: task, meta: { requiresAuth: true }},
-    {path: '/columns', component: column, meta: { requiresAuth: true }},
-    {path: '/projects', component: project, meta: { requiresAuth: true }},
+    {path: '/project/:projectId', component: project, name: 'ProjectPage', props: true, meta: { requiresAuth: true }},
+    {path: '/projects', component: projects, meta: { requiresAuth: true }},
     {path: '/projects/:id', component: projectDetails, name: 'ProjectDetails', props: true, meta: { requiresAuth: true }},
     {path: '/projectsForUser', component: projectForUser, meta: { requiresAuth: true }},
     {path: "/users", component: user, meta: { requiresAuth: true}},

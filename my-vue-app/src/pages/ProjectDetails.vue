@@ -23,7 +23,7 @@
   </template>
   
   <script>
-  import { UserOnProject } from '@/models/UsersOnProject';
+  import { UsersOnProject } from '@/models/UsersOnProject';
   import DataService from '../service/DataService';
   import AddUserModal from '../components/AddUserModal.vue';
   
@@ -37,7 +37,7 @@
     },
     methods: {
       loadUsers() {
-        DataService.readAll(`/projects/projectUsers/${this.id}/users`, item => new UserOnProject(item))
+        DataService.readAll(`/projects/projectUsers/${this.id}/users`, item => new UsersOnProject(item))
           .then(users => this.users = users)
           .catch(console.log);
       },

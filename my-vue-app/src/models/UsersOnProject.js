@@ -1,4 +1,4 @@
-export class UserOnProject{
+export class UsersOnProject{
     constructor(data) {
         this.id = data?.userId;
         this.email = data?.userEmail;
