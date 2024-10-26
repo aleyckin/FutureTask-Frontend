@@ -1,12 +1,12 @@
-export class User {
+export class Task {
     constructor(data) {
       this.id = data?.id;
       this.title = data?.title;
       this.description = data?.description;
-      this.DateCreated = data?.DateCreated;
-      this.DateEnd = data?.DateEnd;
-      this.User = data?.User;
-      this.Column = data?.Column;
+      this.dateCreated = data?.dateCreated;
+      this.dateEnd = data?.dateEnd;
+      this.user = data?.user;
+      this.column = data?.column;
     }
   }
   
