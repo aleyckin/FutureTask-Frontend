@@ -14,6 +14,12 @@
             <router-link v-if="role === 'Administrator'" to="/users" class="nav-link">Пользователи</router-link>
           </li>
           <li class="nav-item">
+            <router-link v-if="role === 'Administrator'" to="/projects" class="nav-link">Проекты</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/projectsForUser" class="nav-link">Мои проекты</router-link>
+          </li>
+          <li class="nav-item">
             <button type="button" class="btn btn-danger ms-3" @click="logout()">Разлогиниться</button>
           </li>
         </ul>
@@ -27,7 +33,7 @@
 </template>
 
 <script>
-import eventBus from '../eventBus'; // Импортируем eventBus
+import eventBus from '../eventBus';
 
 export default {
   data() {
@@ -39,16 +45,16 @@ export default {
   },
   mounted() {
     this.getUserData();
-    eventBus.on('login', this.getUserData); // Слушаем событие логина
+    eventBus.on('login', this.getUserData);
   },
   beforeUnmount() {
-    eventBus.off('login', this.getUserData); // Убираем слушателя при уничтожении
+    eventBus.off('login', this.getUserData);
   },
   methods: {
     getUserData() {
       this.user = localStorage.getItem("user") || '';
       this.role = localStorage.getItem("role") || '';
-      this.token = localStorage.getItem("token"); // Обновляем токен
+      this.token = localStorage.getItem("token");
     },
     logout() {
       localStorage.removeItem("token");
@@ -89,6 +95,6 @@ export default {
 }
 
 .btn-danger:hover {
-    background-color: #c82333; /* Темнее цвет для ховера */
+    background-color: #c82333;
 }
 </style>

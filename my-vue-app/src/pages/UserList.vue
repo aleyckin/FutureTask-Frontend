@@ -1,10 +1,10 @@
 <template>
   <div class="container mt-5">
-    <h1 class="text-center mb-4">User List</h1>
+    <h1 class="text-center mb-4">Список пользователей</h1>
 
     <!-- Кнопка для создания нового пользователя -->
     <div class="text-center mb-4">
-      <button class="btn btn-success" @click="openCreateModal">Create New User</button>
+      <button class="btn btn-success" @click="openCreateModal">Создать нового пользователя</button>
     </div>
 
     <!-- Список пользователей -->
@@ -14,18 +14,18 @@
           <div class="card-body" @click="openEditModal(user)">
             <h5 class="card-title">{{ user.email }}</h5>
             <p class="card-text">
-              Specialization: 
+              Специализация: 
               <span v-if="user.specializationName">{{ user.specializationName }}</span>
-              <span v-else>No specialization</span>
+              <span v-else>Нету специализации</span>
             </p>
             <p class="card-text">
-              UserRole: 
-              <span v-if="user.userRole === 0">RegularUser</span>
-              <span v-else-if="user.userRole === 1">Administrator</span>
-              <span v-else>No UserRole</span>
+              Роль: 
+              <span v-if="user.userRole === 0">Обычный пользователь</span>
+              <span v-else-if="user.userRole === 1">Администратор</span>
+              <span v-else>Нету роли</span>
             </p>
             <!-- Кнопка удаления -->
-            <button class="btn btn-danger" @click.stop="deleteUser(user.id)">Delete</button>
+            <button class="btn btn-danger" @click.stop="deleteUser(user.id)">Удалить</button>
           </div>
         </div>
       </div>
@@ -46,11 +46,11 @@
                 <input type="email" class="form-control" v-model="userForm.email" required>
               </div>
               <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
+                <label for="password" class="form-label">Пароль</label>
                 <input type="password" class="form-control" v-model="userForm.password" :required="!isEditing">
               </div>
               <div class="mb-3">
-                <label for="specialization" class="form-label">Specialization</label>
+                <label for="specialization" class="form-label">Специализация</label>
                 <select class="form-control" v-model="userForm.specializationId" required>
                   <option v-for="specialization in specializations" :key="specialization.id" :value="specialization.id">
                     {{ specialization.name }}
@@ -58,10 +58,10 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label for="role" class="form-label">User Role</label>
+                <label for="role" class="form-label">Роль</label>
                 <select class="form-control" v-model="userForm.userRole" required>
-                  <option value="0">RegularUser</option>
-                  <option value="1">Administrator</option>
+                  <option value="0">Обычный пользователь</option>
+                  <option value="1">Администратор</option>
                 </select>
               </div>
               <button type="submit" class="btn btn-primary">{{ isEditing ? 'Save Changes' : 'Create User' }}</button>
@@ -136,7 +136,11 @@ export default {
     openEditModal(user) {
       this.isEditing = true;
       this.editingUserId = user.id;
-      this.userForm = { ...user, specializationId: user.specialization.id }; // Устанавливаем specializationId
+      this.userForm = {
+        ...user,
+        specializationId: user.specialization ? user.specialization.id : '',
+        password: ''
+      };
       const modal = new Modal(document.getElementById('userModal'));
       modal.show();
     },
