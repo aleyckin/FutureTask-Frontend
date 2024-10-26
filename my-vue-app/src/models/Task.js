@@ -5,7 +5,7 @@ export class Task {
       this.description = data?.description;
       this.dateCreated = data?.dateCreated;
       this.dateEnd = data?.dateEnd;
-      this.user = data?.user;
+      this.userId = data?.userId;
       this.column = data?.column;
     }
   }

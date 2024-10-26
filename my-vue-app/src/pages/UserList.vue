@@ -64,7 +64,7 @@
                   <option value="1">Администратор</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-primary">{{ isEditing ? 'Save Changes' : 'Create User' }}</button>
+              <button type="submit" class="btn btn-primary">{{ isEditing ? 'Сохранить изменения' : 'Создать пользователя' }}</button>
             </form>
           </div>
         </div>
