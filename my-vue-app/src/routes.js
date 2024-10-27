@@ -7,6 +7,7 @@ import projectForUser from "./pages/ProjectsForUser.vue"
 import specialization from "./pages/SpecializationList.vue";
 import login from "./pages/LoginPage.vue";
 import home from "./pages/HomePage.vue";
+import conversation from "./pages/ConversationsPage.vue";
 import Error from "./pages/ErrorPage.vue";
 import {createRouter, createWebHistory} from "vue-router"
 
@@ -20,6 +21,7 @@ const routes = [
     {path: '/specializations', component: specialization, meta: { requiresAuth: true }},
     {path: "/login", component: login},
     {path: "/home", name: 'home', component: home},
+    { path: '/task/:taskId', component: conversation, name: 'TaskChatPage', props: true, meta: { requiresAuth: true } },
     {path: "/error", component: Error, meta: { requiresAuth: true }},
 ]
 

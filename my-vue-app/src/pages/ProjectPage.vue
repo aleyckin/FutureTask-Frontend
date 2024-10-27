@@ -30,6 +30,11 @@
               <p>Дата окончания: {{ task.dateEnd }}</p>
               <button class="btn btn-outline-warning btn-sm" @click="showEditTaskModal(task, column.id)">✏️ Редактировать</button>
               <button class="btn btn-outline-danger btn-sm" @click="deleteTask(task.id)">Удалить</button>
+              <button 
+                  class="btn btn-outline-primary btn-sm" 
+                  @click="goToChatPage(task.id)">
+                  💬 Перейти к чату
+              </button>
             </div>
             <button class="btn btn-light btn-block mt-3" @click="showAddTaskModal(column.id)">+ Добавить задачу</button>
           </div>
@@ -443,6 +448,9 @@
         } catch (error) {
         console.error('Ошибка при перемещении задачи:', error);
         }
+      },
+      goToChatPage(taskId) {
+        this.$router.push({ name: 'TaskChatPage', params: { taskId } });
       },
     },
   };

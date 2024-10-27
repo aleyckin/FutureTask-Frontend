@@ -8,6 +8,7 @@ function toJSON(data) {
             jsonObj[field] = data[field];
         }
     }
+    console.log("jsonObj => " + JSON.stringify(jsonObj, null, 2));
     return jsonObj;
 }
 
@@ -37,6 +38,13 @@ export default class DataService {
             headers: this.getAuthHeader()
         });
         return transformer(response.data);
+    }
+
+    static async readString(url) {
+        const response = await axios.get(this.dataUrlPrefix + url, {
+            headers: this.getAuthHeader()
+        });
+        return response.data;
     }
 
     static async create(url, data) {
