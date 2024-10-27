@@ -44,7 +44,7 @@
   
       <!-- Модальное окно для добавления колонки -->
         <transition name="modal-fade">
-            <div v-if="isColumnModalVisible" class="modal-backdrop" @click="closeColumnModal">
+            <div v-if="isColumnModalVisible" class="modal-backdrop">
                 <div class="modal fade show d-block">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -67,7 +67,7 @@
 
         <!-- Модальное окно для редактирования колонки -->
         <transition name="modal-fade">
-            <div v-if="isEditColumnModalVisible" class="modal-backdrop" @click="closeEditColumnModal">
+            <div v-if="isEditColumnModalVisible" class="modal-backdrop">
                 <div class="modal fade show d-block">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -90,7 +90,7 @@
   
       <!-- Модальное окно для добавления задачи -->
       <transition name="modal-fade">
-        <div v-if="isTaskModalVisible" class="modal-backdrop" @click="closeTaskModal">
+        <div v-if="isTaskModalVisible" class="modal-backdrop">
             <div class="modal fade show d-block">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -124,7 +124,7 @@
 
       <!-- Модальное окно для редактирования задачи -->
       <transition name="modal-fade">
-        <div v-if="isEditTaskModalVisible" class="modal-backdrop" @click="closeEditTaskModal">
+        <div v-if="isEditTaskModalVisible" class="modal-backdrop">
             <div class="modal fade show d-block">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
