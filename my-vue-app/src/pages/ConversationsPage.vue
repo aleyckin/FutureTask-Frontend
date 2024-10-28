@@ -9,7 +9,8 @@
         <p><strong>Дата окончания:</strong> {{ task.dateEnd }}</p>
       </div>
       <p v-else>Загрузка данных задачи...</p>
-  
+       <!-- Сообщение об ошибке -->
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       <!-- Чат-бот для задачи -->
       <div class="chat-container">
         <ChatBot
@@ -27,6 +28,7 @@
   import DataService from '@/service/DataService';
   import { Task } from '@/models/Task';
   import { Conversation } from '@/models/Conversation';
+  import { marked } from 'marked'
   
   export default {
     components: { ChatBot },
@@ -40,6 +42,7 @@
       return {
         task: null,
         conversation: [],
+        errorMessage: null,
       };
     },
     async created() {
@@ -47,7 +50,10 @@
         const taskData = await DataService.read(`/tasks/${this.taskId}`, item => new Task(item));
         this.task = taskData;
 
-        const conversationData = await DataService.readAll(`/tasks/${this.taskId}/chatBot/conversation`, item => new Conversation(item));
+        const conversationData = await DataService.readAll(`/tasks/${this.taskId}/chatBot/conversation`, item => {
+          const formattedText = marked(item.text.replace(/\n/g, '  \n'));
+          return new Conversation({ ...item, text: formattedText });
+        });
         this.conversation = conversationData || [];
         console.log("conversation => " + JSON.stringify(this.conversation, null, 2));
         console.log("conversationData => " + JSON.stringify(conversationData, null, 2));
@@ -76,12 +82,14 @@
           });
 
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Произошла ошибка при отправке сообщения.');
           }
-
+          
           const botReply = await response.json();
+          const formattedText = marked(botReply.responseMessage.replace(/\n/g, '  \n'));
            
-          this.conversation.push({ sender: 'bot', text: botReply.responseMessage });
+          this.conversation.push({ sender: 'bot', text: formattedText });
         } catch (error) {
           console.error('Ошибка отправки сообщения:', error);
         }
@@ -102,12 +110,9 @@
   .task-chat-page {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 20px;
-    background-color: #f3f4f6;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    height: 100vh;
   }
+
   
   .task-info {
     padding: 15px;
@@ -122,9 +127,7 @@
   }
   
   .chat-container {
-    background-color: #ffffff;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    flex-grow: 1;
+    overflow-y: auto;
   }
-  </style>
+    </style>

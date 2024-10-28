@@ -3,6 +3,7 @@
       <h1 class="text-center mb-4">Проект: {{ project.name }}</h1>
       <button class="btn btn-success mb-4" @click="showAddColumnModal">Добавить колонку</button>
 
+      <div v-if="error" class="alert alert-danger">{{ error }}</div>
     <!-- Переключатель режима просмотра задач -->
     <div class="form-group">
       <label>
@@ -22,20 +23,29 @@
                 <button class="btn btn-outline-danger btn-sm" @click="deleteColumn(column.id)">🗑️</button>
               </div>
             </h5>
-            <div v-for="task in column.tasks" :key="task.id" class="task border-top pt-2" draggable @dragstart="handleDragStart($event, task)" :style="getTaskStyle(getPriorityValueString(task.priority))">
-              <h4>{{ task.title }}</h4>
-              <h5>Описание: {{ task.description }}</h5>
-              <p>Приоритетность: {{ getPriorityValueString(task.priority) }}</p>
-              <p>Дата создания: {{ task.dateCreated }}</p>
-              <p>Дата окончания: {{ task.dateEnd }}</p>
-              <button class="btn btn-outline-warning btn-sm" @click="showEditTaskModal(task, column.id)">✏️ Редактировать</button>
-              <button class="btn btn-outline-danger btn-sm" @click="deleteTask(task.id)">Удалить</button>
-              <button 
-                  class="btn btn-outline-primary btn-sm" 
-                  @click="goToChatPage(task.id)">
-                  💬 Перейти к чату
-              </button>
-            </div>
+            <div
+                v-for="task in column.tasks"
+                :key="task.id"
+                class="task border-top pt-2 d-flex align-items-center"
+                draggable
+                @dragstart="handleDragStart($event, task)"
+                :style="getTaskStyle(getPriorityValueString(task.priority))"
+              >
+                <!-- Иконка ручки для перетаскивания -->
+                <div class="drag-handle" @mousedown.stop>
+                  <i class="fas fa-grip-lines"></i>
+                </div>
+                <div class="task-content ml-3">
+                  <h4>{{ task.title }}</h4>
+                  <h5>Описание: {{ task.description }}</h5>
+                  <p>Приоритетность: {{ getPriorityValueString(task.priority) }}</p>
+                  <p>Дата создания: {{ task.dateCreated }}</p>
+                  <p>Дата окончания: {{ task.dateEnd }}</p>
+                  <button class="btn btn-outline-warning btn-sm" @click="showEditTaskModal(task, column.id)">✏️ Редактировать</button>
+                  <button class="btn btn-outline-danger btn-sm" @click="deleteTask(task.id)">Удалить</button>
+                  <button class="btn btn-outline-primary btn-sm" @click="goToChatPage(task.id)">💬 Перейти к чату</button>
+                </div>
+              </div>
             <button class="btn btn-light btn-block mt-3" @click="showAddTaskModal(column.id)">+ Добавить задачу</button>
           </div>
         </div>
@@ -168,6 +178,7 @@
     props: ['projectId'],
     data() {
       return {
+        error: '',
         project: null,
         columns: [],
         newColumnName: '',
@@ -207,6 +218,7 @@
           const project = await DataService.read(`/projects/${projectId}`, item => new Project(item));
           this.project = project;
         } catch (error) {
+          this.error = 'Ошибка при загрузке данных о проекте';
           console.error('Error loading project:', error);
         }
       },
@@ -224,6 +236,7 @@
             this.columns = await Promise.all(columnPromises);
             
         } catch (error) {
+            this.error = 'Ошибка при загрузке колонок проекта';
             console.error('Error loading columns:', error);
         }
       },
@@ -234,6 +247,7 @@
                 : `/tasks/userTasksInColumn/${columnId}`;
                 return await DataService.readAll(url, task => task);
             } catch (error) {
+              this.error = `Ошибка при загрузке задач у колонки c идентификатором: ${columnId}.`;
                 console.error(`Error loading tasks for column ${columnId}:`, error);
                 return [];
             }
@@ -243,6 +257,7 @@
             const projectId = this.$route.params.projectId;
             this.users = await DataService.readAll(`/projects/projectUsers/${projectId}/users`, item => new UsersOnProject(item));
         } catch (error) {
+            this.error = 'Ошибка при загрузке пользователей';
             console.error('Error loading users:', error);
         }
       },
@@ -261,6 +276,7 @@
           this.loadColumns();
           this.closeColumnModal();
         } catch (error) {
+          this.error = 'Ошибка при добавлении новой колонки';
           console.error('Error adding column:', error);
         }
       },
@@ -270,6 +286,7 @@
           await DataService.delete(`/columns/${projectId}/${columnId}`);
           this.loadColumns();
         } catch (error) {
+          this.error = 'Ошибка при удалении колонки';
           console.error('Error deleting column:', error);
         }
       },
@@ -289,6 +306,7 @@
             this.loadColumns();
             this.closeEditColumnModal();
         } catch (error) {
+          this.error = 'Ошибка при редактировании колонки';
             console.error('Error updating column:', error);
         }
       },
@@ -319,6 +337,7 @@
           this.loadColumns();
           this.closeTaskModal();
         } catch (error) {
+          this.error = 'Ошибка при добавлении задачи';
           console.error('Error adding task:', error);
         }
       },
@@ -370,6 +389,7 @@
             await DataService.delete(`/tasks/${taskId}/${projectId}`);
             this.loadColumns();
         } catch (error) {
+            this.error = 'Ошибка при удалении задачи';
             console.error('Error deleting task:', error);
         }
       },
@@ -406,6 +426,7 @@
         this.loadColumns();
         this.closeEditTaskModal();
         } catch (error) {
+          this.error = 'Ошибка при редактировании задачи';
         console.error('Ошибка редактирования задачи:', error);
         }
       },
@@ -446,6 +467,7 @@
             await DataService.update(`/tasks/${taskId}`, taskDtoForUpdate);
             this.loadColumns();
         } catch (error) {
+          this.error = 'Ошибка при перемещении задачи';
         console.error('Ошибка при перемещении задачи:', error);
         }
       },
@@ -547,14 +569,30 @@
     transform: translateY(0);
   }
 
-  .tasks {
-    margin-top: 10px;
-  }
-
   .task {
-    border-radius: 8px;
+    border-radius: 20px;
     padding: 10px;
     margin-bottom: 10px;
+    background-color: #f9f9f9;
+    transition: transform 0.2s;
+  }
+
+  .task:hover {
+    transform: scale(1.02);
+  }
+
+  .task h4 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .card {
+    background-color: #f7f8fa;
+  }
+
+  .btn {
+    margin-right: 5px;
   }
 
   </style>

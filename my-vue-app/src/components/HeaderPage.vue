@@ -70,6 +70,13 @@ export default {
 </script>
 
 <style>
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
 .navbar-brand {
     font-size: 1.5rem;
     font-weight: bold;
