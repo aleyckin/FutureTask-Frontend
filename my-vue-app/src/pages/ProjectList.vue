@@ -1,6 +1,10 @@
 <template>
   <div class="container mt-5">
     <h1 class="text-center mb-4">Список проектов</h1>
+
+    <!-- Компонент уведомлений -->
+    <Notification ref="notification" :message="notificationMessage" :type="notificationType" />
+
     <div class="text-center mb-4">
       <button class="btn btn-success" @click="openCreateModal">Создать новый проект</button>
     </div>
@@ -35,9 +39,10 @@
 import { Project } from '@/models/Project';
 import DataService from '../service/DataService';
 import ProjectModal from '@/components/ProjectModal.vue';
+import Notification from '@/components/NotificationComponent.vue';
 
 export default {
-  components: { ProjectModal },
+  components: { ProjectModal,  Notification },
   data() {
     return {
       projects: [],
@@ -45,6 +50,8 @@ export default {
       isEditing: false,
       showModal: false,
       editingProjectId: null,
+      notificationMessage: '',
+      notificationType: 'success',
     };
   },
   mounted() {
@@ -81,27 +88,55 @@ export default {
       DataService.create('/projects', projectData)
         .then(() => {
           this.loadProjects();
+          this.showNotification('Проект успешно создан.', 'success');
         })
-        .catch((error) => console.log(error));
+        .catch(error => {
+          this.handleError(error, 'Ошибка при создании проекта');
+        });
     },
     updateProject(projectData) {
       DataService.update(`/projects/${this.editingProjectId}`, projectData)
         .then(() => {
           this.loadProjects();
+          this.showNotification('Проект успешно обновлен.', 'success');
         })
-        .catch((error) => console.log(error));
+        .catch(error => {
+          this.handleError(error, 'Ошибка при обновлении данных проекта.');
+        });
     },
     deleteProject(projectId) {
       if (confirm('Вы уверены, что хотите удалить этот проект?')) {
         DataService.delete(`/projects/${projectId}`)
           .then(() => {
             this.loadProjects();
+            this.showNotification('Проект успешно удален.', 'success');
           })
-          .catch((error) => console.log(error));
+          .catch((error) => {
+            this.showNotification('Ошибка при удалении проекта.', 'error');
+            console.log(error);
+          });
       }
     },
     goToProjectDetails(projectId) {
       this.$router.push({ name: 'ProjectDetails', params: { id: projectId } });
+    },
+    showNotification(message, type = 'success') {
+      this.notificationMessage = message;
+      this.notificationType = type;
+      if (this.$refs.notification) {
+        this.$refs.notification.visible = true;
+      }
+    },
+    handleError(error, defaultMessage) {
+      if (error.response && error.response.status === 400 && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        if (errors["$id"]) delete errors["$id"];
+
+        const errorMessages = Object.values(errors).flat().join(' ');
+        this.showNotification(`Ошибка: ${errorMessages}`, 'error');
+      } else {
+        this.showNotification(defaultMessage, 'error');
+      }
     },
   },
 };

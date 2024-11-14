@@ -2,6 +2,9 @@
   <div class="container mt-5">
     <h1 class="text-center mb-4">Список пользователей</h1>
 
+    <!-- Компонент уведомлений -->
+    <Notification ref="notification" :message="notificationMessage" :type="notificationType" />
+
     <!-- Кнопка для создания нового пользователя -->
     <div class="text-center mb-4">
       <button class="btn btn-success" @click="openCreateModal">Создать нового пользователя</button>
@@ -79,20 +82,27 @@ import { User } from '../models/User';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { Modal } from 'bootstrap';
 import { Specialization } from '@/models/Specialization';
+import Notification from '@/components/NotificationComponent.vue'
 
 export default {
+  components: {
+    Notification
+  },
   data() {
     return {
       users: [],
-      specializations: [], // Список специализаций
+      specializations: [],
+      isLoading: false,
       userForm: {
         email: '',
         password: '',
-        specializationId: '', // Используем specializationId вместо объекта
+        specializationId: '',
         userRole: 0
       },
       isEditing: false,
-      editingUserId: null
+      editingUserId: null,
+      notificationMessage: '',
+      notificationType: 'success',
     };
   },
   mounted() {
@@ -108,6 +118,7 @@ export default {
         })
         .catch(error => {
           console.log(error);
+        this.showNotification('Возникла ошибка при загрузке пользователей.', 'error');
         });
     },
     // Загрузка всех специализаций
@@ -118,6 +129,7 @@ export default {
         })
         .catch(error => {
           console.log(error);
+        this.showNotification('Возникла ошибка при загрузке специализаций.', 'error');
         });
     },
     // Открытие модального окна для создания нового пользователя
@@ -126,7 +138,7 @@ export default {
       this.userForm = {
         email: '',
         password: '',
-        specializationId: '', // Сброс поля специализации
+        specializationId: '',
         userRole: 0
       };
       const modal = new Modal(document.getElementById('userModal'));
@@ -147,26 +159,43 @@ export default {
     // Создание нового пользователя
     createUser() {
       this.userForm.userRole = Number(this.userForm.userRole);
+      this.clearNotification();
+      this.isLoading = true;
+      const modal = Modal.getInstance(document.getElementById('userModal'));
 
       DataService.create('/users', this.userForm)
         .then(() => {
           this.loadUsers();
-          const modal = Modal.getInstance(document.getElementById('userModal'));
-          modal.hide();
+          this.showNotification('Создание пользователя прошло успешно!', 'success');
         })
-        .catch(error => console.log(error));
+        .catch(error => {
+          this.handleError(error, 'Ошибка при создании пользователя');
+        })
+        .finally(() => {
+          this.isLoading = false;
+          modal.hide();
+        });
     },
+
     // Обновление данных пользователя
     updateUser() {
+      this.clearNotification();
+      this.isLoading = true;
       this.userForm.userRole = Number(this.userForm.userRole);
+      const modal = Modal.getInstance(document.getElementById('userModal'));
 
       DataService.update(`/users/${this.editingUserId}`, this.userForm)
-        .then(() => {
+      .then(() => {
           this.loadUsers();
-          const modal = Modal.getInstance(document.getElementById('userModal'));
-          modal.hide();
+          this.showNotification('Создание пользователя прошло успешно!', 'success');
         })
-        .catch(error => console.log(error));
+        .catch(error => {
+          this.handleError(error, 'Ошибка при обновлении данных пользователя');
+        })
+        .finally(() => {
+          this.isLoading = false;
+          modal.hide();
+        });
     },
     // Удаление пользователя
     deleteUser(userId) {
@@ -174,11 +203,38 @@ export default {
         DataService.delete(`/users/${userId}`)
           .then(() => {
             this.loadUsers();
+            this.showNotification('Пользователь успешно удалён!', 'success');
           })
-          .catch(error => console.log(error));
+          .catch(error => {
+            console.log(error);
+            this.showNotification('Возникла ошибка при удалении пользователя.', 'error');
+          });
       }
     },
-  }
+    showNotification(message, type = 'success') {
+      this.notificationMessage = message;
+      this.notificationType = type;
+      if (this.$refs.notification) {
+        this.$refs.notification.visible = true;
+      }
+    },
+    // Метод для очистки уведомления
+    clearNotification() {
+      this.notificationMessage = '';
+      this.$refs.notification.visible = false;
+    },
+    handleError(error, defaultMessage) {
+      if (error.response && error.response.status === 400 && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        if (errors["$id"]) delete errors["$id"];
+
+        const errorMessages = Object.values(errors).flat().join(' ');
+        this.showNotification(`Ошибка: ${errorMessages}`, 'error');
+      } else {
+        this.showNotification(defaultMessage, 'error');
+      }
+    },
+    }
 };
 </script>
 

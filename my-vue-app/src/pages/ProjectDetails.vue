@@ -1,6 +1,10 @@
 <template>
     <div class="container mt-5">
       <h1 class="text-center mb-4">Пользователи проекта</h1>
+
+        <!-- Компонент уведомлений -->
+      <Notification ref="notification" :message="notificationMessage" :type="notificationType" />
+
       <div class="text-center mb-4">
         <button class="btn btn-success" @click="openAddUserModal">Добавить пользователя</button>
       </div>
@@ -26,11 +30,13 @@
   import { UsersOnProject } from '@/models/UsersOnProject';
   import DataService from '../service/DataService';
   import AddUserModal from '../components/AddUserModal.vue';
+  import Notification from '@/components/NotificationComponent.vue';
   
   export default {
     props: ['id'],
     components: {
         AddUserModal,
+        Notification,
     },
     data() {
       return { users: [] };
@@ -47,16 +53,44 @@
       addUserToProject(userId, roleOnProject) {
         const projectUserDto = { userId, projectId: this.id, roleOnProject };
         DataService.create('/projects/projectUsers/addUserToProjectAsAdmin', projectUserDto)
-          .then(this.loadUsers) 
-          .catch(console.log);
+          .then(() => {
+            this.loadUsers();
+            this.showNotification('Пользователь успешно добавлен.', 'success');
+        }) 
+          .catch(() => { 
+            this.showNotification('Произошла ошибка при добавлении пользователя.', 'error');
+        });
       },
       removeUserAsAdmin(userId) {
         DataService.delete(`/projects/projectUsers/deleteUserFromProjectAsAdmin/${userId}/${this.id}`)
-          .then(this.loadUsers)
-          .catch(console.log);
+          .then(() => { 
+            this.loadUsers();
+            this.showNotification('Пользователь успешно удалён.', 'success');
+          })
+          .catch(() => { 
+            this.showNotification('Произошла ошибка при удалении пользователя', 'error');
+          });
       },
       roleText(role) {
         return role === 0 ? 'DefaultWorker' : 'TeamLead';
+      },
+      showNotification(message, type = 'success') {
+      this.notificationMessage = message;
+      this.notificationType = type;
+      if (this.$refs.notification) {
+        this.$refs.notification.visible = true;
+      }
+      },
+      handleError(error, defaultMessage) {
+        if (error.response && error.response.status === 400 && error.response.data.errors) {
+          const errors = error.response.data.errors;
+          if (errors["$id"]) delete errors["$id"];
+
+          const errorMessages = Object.values(errors).flat().join(' ');
+          this.showNotification(`Ошибка: ${errorMessages}`, 'error');
+        } else {
+          this.showNotification(defaultMessage, 'error');
+        }
       },
     },
     mounted() {
