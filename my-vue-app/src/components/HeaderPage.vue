@@ -1,9 +1,9 @@
 <template>
   <nav v-if="token" class="navbar navbar-expand-lg navbar-light bg-light shadow">
     <div class="container-fluid">
-      <router-link to="/home" class="navbar-brand">
-        <img src="../assets/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
-        FutureTask
+      <router-link to="/home" class="navbar-brand d-flex align-items-center">
+        <img src="../assets/logo.png" alt="Logo" width="40" height="40" class="me-2">
+        <span class="fs-4 fw-bold">FutureTask</span>
       </router-link>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -69,6 +69,7 @@ export default {
 }
 </script>
 
+
 <style>
 .navbar {
     position: fixed;
@@ -78,8 +79,19 @@ export default {
 }
 
 .navbar-brand {
+    display: flex;
+    align-items: center;
     font-size: 1.5rem;
     font-weight: bold;
+}
+
+.navbar-brand img {
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand img:hover {
+    transform: scale(1.1);
 }
 
 .nav-link {

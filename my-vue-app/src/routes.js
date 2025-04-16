@@ -12,17 +12,17 @@ import Error from "./pages/ErrorPage.vue";
 import {createRouter, createWebHistory} from "vue-router"
 
 const routes = [
-    {path: '/project/:projectId', component: project, name: 'ProjectPage', props: true, meta: { requiresAuth: true }},
-    {path: '/projects', component: projects, meta: { requiresAuth: true }},
-    {path: '/projects/:id', component: projectDetails, name: 'ProjectDetails', props: true, meta: { requiresAuth: true }},
-    {path: '/projectsForUser', component: projectForUser, meta: { requiresAuth: true }},
-    {path: "/users", component: user, meta: { requiresAuth: true}},
-    {path: "/userAddModal", component: userAddModal, meta: { requiresAuth: true}},
-    {path: '/specializations', component: specialization, meta: { requiresAuth: true }},
-    {path: "/login", component: login},
-    {path: "/home", name: 'home', component: home},
-    { path: '/task/:taskId', component: conversation, name: 'TaskChatPage', props: true, meta: { requiresAuth: true } },
-    {path: "/error", component: Error, meta: { requiresAuth: true }},
+    {path: '/project/:projectId', component: project, name: 'ProjectPage', props: true, meta: { title: 'Проект', requiresAuth: true }},
+    {path: '/projects', component: projects, meta: { title: 'Все проекты', requiresAuth: true }},
+    {path: '/projects/:id', component: projectDetails, name: 'ProjectDetails', props: true, meta: { title: 'Пользователи на проекте', requiresAuth: true }},
+    {path: '/projectsForUser', component: projectForUser, meta: { title: 'Мои проекты', requiresAuth: true }},
+    {path: "/users", component: user, meta: { title: 'Список пользователей', requiresAuth: true}},
+    {path: "/userAddModal", component: userAddModal, meta: { title: 'Добавление пользователя', requiresAuth: true}},
+    {path: '/specializations', component: specialization, meta: { title: 'Специализации', requiresAuth: true }},
+    {path: "/login", component: login, meta: { title: 'Авторизация'}},
+    {path: "/home", name: 'home', component: home, meta: { title: 'Новостная страница', requiresAuth: true }},
+    {path: '/task/:taskId', component: conversation, name: 'TaskChatPage', props: true, meta: { title: 'Чат с ботом', requiresAuth: true }},
+    {path: "/error", component: Error, meta: { title: 'Возникла ошибка' }},
 ]
 
 const router = createRouter({
@@ -46,6 +46,13 @@ router.beforeEach((to, from, next) => {
             return;
         }
     }
+
+    if (to.meta.title) {
+        document.title = to.meta.title;
+    } else {
+        document.title = "Future Task";
+    }
+
     next();
 });
 

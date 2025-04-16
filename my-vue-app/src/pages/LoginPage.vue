@@ -59,13 +59,28 @@ export default {
         // Перенаправляем пользователя на главную страницу или другую защищенную страницу
         this.$router.push({ name: 'home' });
       } catch (error) {
-        // Если возникла ошибка, показываем сообщение об ошибке
-        if (error.response && error.response.status === 401) {
-          this.errorMessage = 'Неверные данные';
+        if (error.response) {
+            // Сервер ответил с ошибкой
+            const errorData = error.response.data;
+            this.errorMessage = errorData.error || 'Неизвестная ошибка сервера';
+            
+            // Дополнительная обработка специфичных статусов
+            if (error.response.status === 401) {
+                this.errorMessage = 'Неверные учетные данные';
+            }
+        } else if (error.request) {
+            // Запрос был отправлен, но ответ не получен
+            this.errorMessage = 'Сервер не ответил. Проверьте подключение к интернету';
         } else {
-          this.errorMessage = 'Произошла ошибка. Попробуйте позже.';
+            // Ошибка при настройке запроса
+            this.errorMessage = 'Ошибка при отправке запроса: ' + error.message;
         }
-      }
+        
+        // Автоматическое скрытие ошибки через 5 секунд
+        setTimeout(() => {
+            this.errorMessage = '';
+        }, 5000);
+    }
     },
     setUserRole(roleNumber) {
         switch (roleNumber) {
@@ -84,23 +99,53 @@ export default {
 <style scoped>
 .login-container {
   max-width: 400px;
-  margin: auto;
+  width: 100%;
   padding: 20px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Центрирование по горизонтали */
-  justify-content: center; /* Центрирование по вертикали */
-  height: auto; /* Задаем высоту контейнера */
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: white;
 }
 
 .form-group {
-  margin-bottom: 15px;
-  width: 100%; /* Занимаем всю ширину контейнера */
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
 }
 
 .error-message {
-  color: red;
+    color: #dc3545;
+    background: #f8d7da;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #f5c6cb;
+    margin-top: 15px;
+    width: 100%;
+    text-align: center;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

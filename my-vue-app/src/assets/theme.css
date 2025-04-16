@@ -1,0 +1,26 @@
+/* Базовая тема */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --accent-color: #007bff;
+    --card-bg-color: #ffffff;
+    --text-secondary-color: #6c757d;
+}
+
+/* Черно-розовая тема */
+[data-theme="dark-pink"] {
+    --bg-color: #000000;
+    --text-color: #ff69b4;
+    --accent-color: #ff1493;
+    --card-bg-color: #1c1c1c;
+    --text-secondary-color: #ff69b4;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+a {
+    color: var(--accent-color);
+}

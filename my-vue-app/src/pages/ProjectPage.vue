@@ -1,19 +1,33 @@
 <template>
     <div class="container mt-5" v-if="project">
+      <div v-if="roleOnProject !== null" class="role-badge">
+        Ваша роль: {{ roleLabel }}
+        <span class="badge bg-primary ms-2">{{ roleLabel }}</span>
+      </div>
       <h1 class="text-center mb-4">Проект: {{ project.name }}</h1>
       <button class="btn btn-success mb-4" @click="showAddColumnModal">Добавить колонку</button>
 
       <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
     <!-- Переключатель режима просмотра задач -->
-    <div class="form-group">
+    <div class="form-group" v-if="canViewAllTasks">
       <label>
         <input type="checkbox" v-model="showAllTasks" @change="loadColumns">
         Показать все задачи
       </label>
     </div>
+    <div v-else class="text-muted mb-3">
+      Доступ к полному просмотру только для администраторов и руководителей
+    </div>
 
     <div class="row">
-      <div class="col-md-4" v-for="column in columns" :key="column.id" @drop="handleDrop($event, column.id)" @dragover.prevent>
+      <div 
+        class="col-md-4" 
+        v-for="column in columns" 
+        :key="column.id" 
+        @drop="handleDrop($event, column.id)" 
+        @dragover.prevent
+      >
         <div class="card mb-4 shadow-sm">
           <div class="card-body">
             <h5 class="card-title d-flex justify-content-between align-items-center">
@@ -24,29 +38,61 @@
               </div>
             </h5>
             <div
-                v-for="task in column.tasks"
-                :key="task.id"
-                class="task border-top pt-2 d-flex align-items-center"
-                draggable
-                @dragstart="handleDragStart($event, task)"
-                :style="getTaskStyle(getPriorityValueString(task.priority))"
-              >
-                <!-- Иконка ручки для перетаскивания -->
+              v-for="task in column.tasks"
+              :key="task.id"
+              class="task border-top pt-2"
+              draggable
+              @dragstart="handleDragStart($event, task)"
+              style="background: white;"
+            >
+            <div class="d-flex align-items-center">
                 <div class="drag-handle" @mousedown.stop>
                   <i class="fas fa-grip-lines"></i>
                 </div>
-                <div class="task-content ml-3">
-                  <h4>{{ task.title }}</h4>
-                  <h5>Описание: {{ task.description }}</h5>
-                  <p>Приоритетность: {{ getPriorityValueString(task.priority) }}</p>
-                  <p>Дата создания: {{ task.dateCreated }}</p>
-                  <p>Дата окончания: {{ task.dateEnd }}</p>
-                  <button class="btn btn-outline-warning btn-sm" @click="showEditTaskModal(task, column.id)">✏️ Редактировать</button>
-                  <button class="btn btn-outline-danger btn-sm" @click="deleteTask(task.id)">Удалить</button>
-                  <button class="btn btn-outline-primary btn-sm" @click="goToChatPage(task.id)">💬 Перейти к чату</button>
+                <div class="task-content ml-3 w-100 p-3"> <!-- Добавлен padding -->
+                  <div class="d-flex justify-content-between align-items-center mb-3"> <!-- Увеличен margin -->
+                    <h4 class="mb-0 task-title">{{ task.title }}</h4>
+                    <div class="task-priority" 
+                        :class="'priority-' + getPriorityValueString(task.priority).toLowerCase()">
+                      {{ getPriorityValueString(task.priority) }}
+                    </div>
+                  </div>
+                  
+                  <div class="task-details">
+                    <p class="mb-3 text-muted small">{{ task.description }}</p> <!-- Увеличен margin -->
+                    <div class="d-flex justify-content-between align-items-end">
+                      <div class="d-flex flex-column gap-2"> <!-- Добавлены промежутки -->
+                        <div class="d-flex gap-2">
+                          <span class="badge">
+                            📅 {{ formatDate(task.dateCreated) }}
+                          </span>
+                          <span class="badge">
+                            ⏳ {{ formatDate(task.dateEnd) }}
+                          </span>
+                        </div>
+                        <button class="btn btn-chat"
+                        @click="goToChatPage(task.id)">
+                          💬 Чат задачи
+                        </button>
+                      </div>
+                      <div class="d-flex gap-1">
+                        <button class="btn btn-outline-warning btn-sm"
+                        @click="showEditTaskModal(task, column.id)">
+                          ✏️
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm"
+                        @click="deleteTask(task.id)">
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            <button class="btn btn-light btn-block mt-3" @click="showAddTaskModal(column.id)">+ Добавить задачу</button>
+            </div>
+            <button class="btn btn-light btn-block mt-3" @click="showAddTaskModal(column.id)">
+              + Добавить задачу
+            </button>
           </div>
         </div>
       </div>
@@ -104,27 +150,37 @@
             <div class="modal fade show d-block">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Добавить задачу</h5>
-                    <button type="button" class="close" @click="closeTaskModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" v-model="newTaskName" class="form-control mb-2" placeholder="Название задачи">
-                    <textarea v-model="newTaskDescription" class="form-control mb-2" placeholder="Описание задачи"></textarea>
-                    <select v-model="newTaskPriority" class="form-control mb-2">
-                    <option value="" disabled selected>Выберите приоритет</option>
-                    <option v-for="priority in priorities" :key="priority" :value="priority">{{ priority }}</option>
-                    </select>
-                    <input type="date" v-model="newTaskDateEnd" class="form-control mb-2" placeholder="Дата окончания">
-                    <select v-model="selectedUserId" class="form-control mb-2">
-                    <option value="" disabled selected>Выберите пользователя</option>
-                    <option v-for="user in users" :key="user.id" :value="user.id">{{ user.email }}</option>
-                    </select>
-                </div>
-                <div class="modal-footer">
+                  <div class="modal-header">
+                      <h5 class="modal-title">Добавить задачу</h5>
+                      <button type="button" class="close" @click="closeTaskModal">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                      <input type="text" v-model="newTaskName" class="form-control mb-2" placeholder="Название задачи">
+                      <textarea v-model="newTaskDescription" class="form-control mb-2" placeholder="Описание задачи"></textarea>
+                      <select v-model="newTaskPriority" class="form-control mb-2">
+                      <option value="" disabled selected>Выберите приоритет</option>
+                      <option v-for="priority in priorities" :key="priority" :value="priority">{{ priority }}</option>
+                      </select>
+                      <input type="date" v-model="newTaskDateEnd" class="form-control mb-2" placeholder="Дата окончания">
+                      <select v-model="selectedUserId" class="form-control mb-2">
+                      <option value="" disabled selected>Выберите пользователя</option>
+                      <option v-for="user in users" :key="user.id" :value="user.id">{{ user.email }}</option>
+                      </select>
+                  </div>
+                  <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @click="closeTaskModal">Закрыть</button>
-                    <button @click="addTask(currentColumnId)">Сохранить</button>
-                </div>
+                    <button 
+                        class="btn btn-primary"
+                        :class="{ 'loading': isSaving }"
+                        @click="addTask(currentColumnId)"
+                        :disabled="isSaving"
+                    >
+                        <span class="button-content">
+                            <span v-if="!isSaving">Сохранить</span>
+                            <span v-else class="spinner"></span>
+                        </span>
+                    </button>
+                  </div>
                 </div>
             </div>
             </div>
@@ -203,13 +259,27 @@
         selectedUserId: null,
         showAllTasks: false,
         isTaskModalVisible: false,
-        currentTaskIdForEdit: null
+        currentTaskIdForEdit: null,
+        isSaving: false, // для анимации загрузки, после нажатия на кнопку "Сохранить"
+        rolesOnProject: ['TeamLead', 'DefaultWorker'],
+        roleOnProject: null,
       };
     },
     mounted() {
       this.loadProject();
+      this.loadRoleOnProject();
       this.loadColumns();
       this.loadUsers();
+    },
+    computed: {
+      canViewAllTasks() {
+        const isAdmin = localStorage.getItem('role') === 'Administrator';
+        return isAdmin || this.roleOnProject === 'TeamLead'; // Сравниваем со строкой
+      },
+      roleLabel() {
+        if (localStorage.getItem('role') === 'Administrator') return 'Administrator';
+        return this.roleOnProject; // Возвращаем уже преобразованное значение
+      }
     },
     methods: {
       async loadProject() {
@@ -220,6 +290,19 @@
         } catch (error) {
           this.error = 'Ошибка при загрузке данных о проекте';
           console.error('Error loading project:', error);
+        }
+      },
+      async loadRoleOnProject() {
+        try {
+          const projectId = this.$route.params.projectId;
+          const role = await DataService.readString(`/projects/${projectId}/role`);
+          
+          this.roleOnProject = Number(role) === 1 ? 'TeamLead' : 'DefaultWorker';
+          
+          console.log('Processed role:', this.roleOnProject);
+        } catch (error) {
+          console.error('Ошибка загрузки роли:', error);
+          this.roleOnProject = 'DefaultWorker';
         }
       },
       async loadColumns() {
@@ -322,6 +405,9 @@
         this.newTaskDateEnd = '';
       },
       async addTask(columnId) {
+        if(this.isSaving) return;
+        
+        this.isSaving = true;
         try {
           const projectId = this.$route.params.projectId;
           const taskDtoForCreate = {
@@ -339,6 +425,9 @@
         } catch (error) {
           this.error = 'Ошибка при добавлении задачи';
           console.error('Error adding task:', error);
+        }
+        finally {
+            this.isSaving = false;
         }
       },
       getPriorityValue(priority) {
@@ -429,6 +518,10 @@
           this.error = 'Ошибка при редактировании задачи';
         console.error('Ошибка редактирования задачи:', error);
         }
+      },
+      formatDate(dateString) {
+        const options = { day: '2-digit', month: 'short', year: 'numeric' }
+        return new Date(dateString).toLocaleDateString('ru-RU', options)
       },
       handleDragStart(event, task) {
         event.dataTransfer.setData('taskId', task.id);
@@ -570,16 +663,74 @@
   }
 
   .task {
-    border-radius: 20px;
-    padding: 10px;
-    margin-bottom: 10px;
-    background-color: #f9f9f9;
-    transition: transform 0.2s;
+    background: #fff !important;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: box-shadow 0.2s;
   }
 
   .task:hover {
-    transform: scale(1.02);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
   }
+
+  .btn-chat {
+    color: #1a73e8;
+    border: 1px solid #1a73e8;
+    border-radius: 8px;
+    padding: 2px 12px;
+    text-decoration: none !important;
+    transition: all 0.2s;
+  }
+
+  .btn-chat:hover {
+    background: #1a73e8;
+    color: white !important;
+  }
+
+  .badge {
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6;
+    font-weight: 500;
+    padding: 5px 10px;
+    color: #495057 !important;
+  }
+
+  .task-details {
+    color: #606060;
+    font-size: 0.88em;
+  }
+
+  .task-content h4 {
+    color: #2d2d2d;
+    font-size: 1.05rem;
+  }
+
+  .task-priority {
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: #f0f0f0;
+  }
+
+  .task-priority::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .priority-high::before { background-color: #ff4444; }
+  .priority-medium::before { background-color: #ffc107; }
+  .priority-low::before { background-color: #4caf50; }
+
+  .priority-high { color: #ff4444; }
+  .priority-medium { color: #ffc107; }
+  .priority-low { color: #4caf50; }
 
   .task h4 {
     font-size: 1.1rem;
@@ -595,5 +746,64 @@
     margin-right: 5px;
   }
 
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 1;
+    background-color: #b3d7ff;
+    border-color: #b3d7ff;
+}
+
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.button-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.loading .button-content {
+    opacity: 0.8;
+}
+
+.role-badge {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  padding: 8px 15px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.text-muted {
+  font-size: 0.9em;
+  color: #6c757d;
+}
   </style>
   
