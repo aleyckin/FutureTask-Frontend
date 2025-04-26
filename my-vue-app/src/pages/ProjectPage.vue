@@ -170,6 +170,17 @@
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @click="closeTaskModal">Закрыть</button>
                     <button 
+                        class="btn btn-info"
+                        :class="{ 'loading': isFetchingRecommendations }"
+                        @click="fetchRecommendations"
+                        :disabled="!(newTaskName.trim() && newTaskDescription.trim())"
+                    >
+                        <span class="button-content">
+                            <span v-if="!isFetchingRecommendations">Получить рекомендации</span>
+                            <span v-else class="spinner"></span>
+                        </span>
+                    </button>
+                    <button 
                         class="btn btn-primary"
                         :class="{ 'loading': isSaving }"
                         @click="addTask(currentColumnId)"
@@ -263,6 +274,7 @@
         isSaving: false, // для анимации загрузки, после нажатия на кнопку "Сохранить"
         rolesOnProject: ['TeamLead', 'DefaultWorker'],
         roleOnProject: null,
+        isFetchingRecommendations: false,
       };
     },
     mounted() {
@@ -563,6 +575,53 @@
           this.error = 'Ошибка при перемещении задачи';
         console.error('Ошибка при перемещении задачи:', error);
         }
+      },
+      async fetchRecommendations() {
+          this.isFetchingRecommendations = true;
+          const projectId = this.projectId;
+          const userMessage = `${this.newTaskName}. ${this.newTaskDescription}`;
+
+          try {
+              // Получаем данные с сервера как объект
+              const recommendationData = await DataService.read(`/tasks/${projectId}/recommendations?userMessage=${encodeURIComponent(userMessage)}`, data => data);
+
+              // Логируем ответ сервера для диагностики
+              console.log('Received recommendation data:', recommendationData);
+
+              // Установка данных из рекомендаций
+              // Преобразовываем числовой приоритет в строку
+              switch (recommendationData.priority) {
+                  case 0:
+                      this.newTaskPriority = 'Low';
+                      break;
+                  case 1:
+                      this.newTaskPriority = 'Medium';
+                      break;
+                  case 2:
+                      this.newTaskPriority = 'High';
+                      break;
+                  default:
+                      this.newTaskPriority = '';
+              }
+
+              // Устанавливаем исполнителя (предполагая, что userEmail — это уникальный идентификатор пользователя)
+              this.selectedUserId = recommendationData.userId || '';
+
+              // Обновляем дату
+              this.newTaskDateEnd = (() => {
+                  let date = new Date();
+                  const daysToAdd = parseInt(recommendationData.daysToTask, 10) || 0;
+                  date.setDate(date.getDate() + daysToAdd);
+                  return date.toISOString().split('T')[0]; // Возвращает дату в формате YYYY-MM-DD
+              })();
+
+              // Принудительно обновляем интерфейс (необязательно, но дополнительная гарантия)
+              this.$forceUpdate();
+          } catch (error) {
+              console.error('Ошибка при получении рекомендаций:', error.message || error);
+          } finally {
+              this.isFetchingRecommendations = false;
+          }
       },
       goToChatPage(taskId) {
         this.$router.push({ name: 'TaskChatPage', params: { taskId } });
