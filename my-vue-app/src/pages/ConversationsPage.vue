@@ -70,7 +70,7 @@
         try {
           this.conversation.push({ sender: 'user', text: userMessage });
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:5000/api/tasks/${this.taskId}/chatBot`, {
+          const response = await fetch(`http://localhost:5050/api/tasks/${this.taskId}/chatBot`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,

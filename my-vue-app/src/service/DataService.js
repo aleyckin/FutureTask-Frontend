@@ -13,7 +13,7 @@ function toJSON(data) {
 }
 
 export default class DataService {
-    static dataUrlPrefix = 'http://localhost:5000/api';
+    static dataUrlPrefix = 'http://localhost:5050/api';
 
     // Получаем токен из localStorage
     static getToken() {
