@@ -20,7 +20,7 @@
             <router-link to="/projectsForUser" class="nav-link">Мои проекты</router-link>
           </li>
           <li class="nav-item">
-            <button type="button" class="btn btn-danger ms-3" @click="logout()">Разлогиниться</button>
+            <button type="button" class="btn btn-danger ms-3" @click="logout()">Выйти из аккаунта</button>
           </li>
         </ul>
         <div class="navbar-text ms-auto">
