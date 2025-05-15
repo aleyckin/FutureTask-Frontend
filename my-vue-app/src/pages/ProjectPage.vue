@@ -5,6 +5,15 @@
         <span class="badge bg-primary ms-2">{{ roleLabel }}</span>
       </div>
       <h1 class="text-center mb-4">Проект: {{ project.name }}</h1>
+      <!-- Кнопка скачивания отчёта -->
+      <div class="text-center mb-4" v-if="canManageTasks">
+        <button 
+          class="btn btn-outline-primary"
+          @click="downloadProjectReport"
+        >
+          📄 Скачать отчёт по проекту
+        </button>
+      </div>
       <button class="btn btn-success mb-4"
         v-if="canManageTasks"
         @click="showAddColumnModal"
@@ -664,6 +673,28 @@
           } finally {
               this.isFetchingRecommendations = false;
           }
+      },
+      async downloadProjectReport() {
+        try {
+          // Получаем projectId из текущего маршрута
+          const projectId = this.$route.params.projectId;
+          // Загружаем PDF как Blob
+          const blob = await DataService.downloadBlob(`/metrics/ReportForProject/${projectId}`);
+          // Создаём URL для скачивания
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          // Задаём имя файла
+          link.download = `Report_${projectId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          // Убираем ссылку и сбрасываем объект
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Ошибка при скачивании отчёта:', error);
+          this.error = 'Не удалось скачать отчёт';
+        }
       },
       goToChatPage(taskId) {
         this.$router.push({ name: 'TaskChatPage', params: { taskId } });
