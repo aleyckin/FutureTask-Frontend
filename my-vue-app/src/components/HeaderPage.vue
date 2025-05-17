@@ -20,12 +20,23 @@
             <router-link to="/projectsForUser" class="nav-link">Мои проекты</router-link>
           </li>
           <li class="nav-item">
-            <button type="button" class="btn btn-danger ms-3" @click="logout()">Разлогиниться</button>
+            <button type="button" class="btn btn-danger ms-3" @click="logout()">Выйти из аккаунта</button>
           </li>
         </ul>
-        <div class="navbar-text ms-auto">
+        <div class="navbar-text ms-auto d-flex align-items-center">
+          <!-- Кнопка скачивания своего отчёта слева -->
+          <button
+            v-if="token"
+            class="btn btn-outline-secondary btn-sm me-3"
+            @click="downloadUserReport"
+            title="Скачать отчёт по вашим проектам"
+          >
+            📄 Сформировать отчёт
+          </button>
+
+          <!-- Информация о пользователе и роли -->
           <span v-if="user">Пользователь: <strong>{{ user }}</strong></span>
-          <span v-if="role"> | Роль: <strong>{{ role }}</strong></span>
+          <span v-if="role" class="ms-2">| Роль: <strong>{{ role }}</strong></span>
         </div>
       </div>
     </div>
@@ -34,6 +45,7 @@
 
 <script>
 import eventBus from '../eventBus';
+import DataService from '../service/DataService';
 
 export default {
   data() {
@@ -64,7 +76,24 @@ export default {
       this.user = '';
       this.role = '';
       this.$router.push('/login');
-    }
+    },
+    async downloadUserReport() {
+     try {
+       // Запросим PDF в виде Blob
+       const blob = await DataService.downloadBlob(`/metrics/ReportForUser`);
+       // Сформируем временную ссылку и имя файла
+       const url = window.URL.createObjectURL(blob);
+       const link = document.createElement('a');
+       link.href = url;
+       link.download = `Report_${this.user}.pdf`;
+       document.body.appendChild(link);
+       link.click();
+       document.body.removeChild(link);
+       window.URL.revokeObjectURL(url);
+     } catch (err) {
+       console.error('Ошибка при скачивании отчёта пользователя:', err);
+     }
+   }
   }
 }
 </script>

@@ -67,4 +67,12 @@ export default class DataService {
         });
         return true;
     }
+
+    static async downloadBlob(url) {
+        const response = await axios.get(this.dataUrlPrefix + url, {
+        headers: this.getAuthHeader(),
+        responseType: 'blob'
+        });
+        return response.data;
+    }
 }

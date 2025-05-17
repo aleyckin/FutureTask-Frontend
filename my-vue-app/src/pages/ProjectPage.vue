@@ -5,19 +5,30 @@
         <span class="badge bg-primary ms-2">{{ roleLabel }}</span>
       </div>
       <h1 class="text-center mb-4">Проект: {{ project.name }}</h1>
-      <button class="btn btn-success mb-4" @click="showAddColumnModal">Добавить колонку</button>
+      <!-- Кнопка скачивания отчёта -->
+      <div class="text-center mb-4" v-if="canManageTasks">
+        <button 
+          class="btn btn-outline-primary"
+          @click="downloadProjectReport"
+        >
+          📄 Скачать отчёт по проекту
+        </button>
+      </div>
+      <button class="btn btn-success mb-4"
+        v-if="canManageTasks"
+        @click="showAddColumnModal"
+      >
+        Добавить колонку
+      </button>
 
       <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
     <!-- Переключатель режима просмотра задач -->
-    <div class="form-group" v-if="canViewAllTasks">
+    <div class="form-group">
       <label>
         <input type="checkbox" v-model="showAllTasks" @change="loadColumns">
         Показать все задачи
       </label>
-    </div>
-    <div v-else class="text-muted mb-3">
-      Доступ к полному просмотру только для администраторов и руководителей
     </div>
 
     <div class="row">
@@ -32,7 +43,7 @@
           <div class="card-body">
             <h5 class="card-title d-flex justify-content-between align-items-center">
               {{ column.title }}
-              <div>
+              <div v-if="canManageTasks">
                 <button class="btn btn-outline-secondary btn-sm mr-2" @click="showEditColumnModal(column)">✏️</button>
                 <button class="btn btn-outline-danger btn-sm" @click="deleteColumn(column.id)">🗑️</button>
               </div>
@@ -75,7 +86,7 @@
                           💬 Чат задачи
                         </button>
                       </div>
-                      <div class="d-flex gap-1">
+                      <div class="d-flex gap-1" v-if="canManageTasks">
                         <button class="btn btn-outline-warning btn-sm"
                         @click="showEditTaskModal(task, column.id)">
                           ✏️
@@ -90,7 +101,10 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-light btn-block mt-3" @click="showAddTaskModal(column.id)">
+            <button class="btn btn-light btn-block mt-3"
+              v-if="canManageTasks"  
+              @click="showAddTaskModal(column.id)"
+            >
               + Добавить задачу
             </button>
           </div>
@@ -275,6 +289,12 @@
         rolesOnProject: ['TeamLead', 'DefaultWorker'],
         roleOnProject: null,
         isFetchingRecommendations: false,
+        metrics: { // для логов 
+          modalOpenedAt: 0,
+          recRequestAt: 0,
+          recReceivedAt: 0,
+          saveAt: 0,
+        }
       };
     },
     mounted() {
@@ -284,7 +304,7 @@
       this.loadUsers();
     },
     computed: {
-      canViewAllTasks() {
+      canManageTasks() {
         const isAdmin = localStorage.getItem('role') === 'Administrator';
         return isAdmin || this.roleOnProject === 'TeamLead'; // Сравниваем со строкой
       },
@@ -408,6 +428,7 @@
       showAddTaskModal(columnId) {
         this.currentColumnId = columnId;
         this.isTaskModalVisible = true;
+        this.metrics.modalOpenedAt = performance.now();
       },
       closeTaskModal() {
         this.isTaskModalVisible = false;
@@ -418,7 +439,7 @@
       },
       async addTask(columnId) {
         if(this.isSaving) return;
-        
+        this.metrics.saveAt = performance.now(); 
         this.isSaving = true;
         try {
           const projectId = this.$route.params.projectId;
@@ -433,6 +454,7 @@
           console.log("taskDtoForUpdate => " + JSON.stringify(taskDtoForCreate, null, 2));
           await DataService.create(`/tasks/${projectId}`, taskDtoForCreate);
           this.loadColumns();
+          this.logMetrics();  
           this.closeTaskModal();
         } catch (error) {
           this.error = 'Ошибка при добавлении задачи';
@@ -493,6 +515,34 @@
             this.error = 'Ошибка при удалении задачи';
             console.error('Error deleting task:', error);
         }
+      },
+      async logMetrics() {
+        const { modalOpenedAt, recRequestAt, recReceivedAt, saveAt } = this.metrics;
+        const payload = {
+          openToRec: recRequestAt && modalOpenedAt ? recRequestAt - modalOpenedAt : 0, // сколько до клика «рекомендации»
+          recResponseTime: recRequestAt && recReceivedAt ? recReceivedAt - recRequestAt : 0, // задержка AI
+          recToSave: recReceivedAt && saveAt ? saveAt - recReceivedAt : 0, // заполнение после рекомендаций
+          totalTime: saveAt && modalOpenedAt ? saveAt - modalOpenedAt : 0, // общее время
+          usedRecommendations: !!recRequestAt // true, если была попытка получения рекомендаций
+        };
+
+        try{
+          await DataService.create(`/metrics/task`, payload);
+          this.resetMetrics();
+        }
+        catch (error)
+        {
+          this.error = 'Ошибка при сохранении логов';
+            console.error('Error with saving logs data:', error);
+        }
+      },
+      resetMetrics() {
+        this.metrics = {
+          modalOpenedAt: null,
+          recRequestAt: null,
+          recReceivedAt: null,
+          saveAt: null
+        };
       },
       showEditTaskModal(task, columnId) {
         this.editedTaskName = task.title;
@@ -577,6 +627,7 @@
         }
       },
       async fetchRecommendations() {
+          this.metrics.recRequestAt = performance.now();
           this.isFetchingRecommendations = true;
           const projectId = this.projectId;
           const userMessage = `${this.newTaskName}. ${this.newTaskDescription}`;
@@ -584,10 +635,10 @@
           try {
               // Получаем данные с сервера как объект
               const recommendationData = await DataService.read(`/tasks/${projectId}/recommendations?userMessage=${encodeURIComponent(userMessage)}`, data => data);
+              this.metrics.recReceivedAt = performance.now();
 
               // Логируем ответ сервера для диагностики
               console.log('Received recommendation data:', recommendationData);
-
               // Установка данных из рекомендаций
               // Преобразовываем числовой приоритет в строку
               switch (recommendationData.priority) {
@@ -622,6 +673,28 @@
           } finally {
               this.isFetchingRecommendations = false;
           }
+      },
+      async downloadProjectReport() {
+        try {
+          // Получаем projectId из текущего маршрута
+          const projectId = this.$route.params.projectId;
+          // Загружаем PDF как Blob
+          const blob = await DataService.downloadBlob(`/metrics/ReportForProject/${projectId}`);
+          // Создаём URL для скачивания
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          // Задаём имя файла
+          link.download = `Report_${projectId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          // Убираем ссылку и сбрасываем объект
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Ошибка при скачивании отчёта:', error);
+          this.error = 'Не удалось скачать отчёт';
+        }
       },
       goToChatPage(taskId) {
         this.$router.push({ name: 'TaskChatPage', params: { taskId } });
