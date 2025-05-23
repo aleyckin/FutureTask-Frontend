@@ -24,3 +24,7 @@ body {
 a {
     color: var(--accent-color);
 }
+
+body, html {
+  font-family: 'Montserrat', Arial, sans-serif;
+}
