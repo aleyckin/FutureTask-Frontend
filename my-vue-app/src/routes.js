@@ -15,7 +15,7 @@ const routes = [
     {path: '/project/:projectId', component: project, name: 'ProjectPage', props: true, meta: { title: 'Проект', requiresAuth: true }},
     {path: '/projects', component: projects, meta: { title: 'Все проекты', requiresAuth: true }},
     {path: '/projects/:id', component: projectDetails, name: 'ProjectDetails', props: true, meta: { title: 'Пользователи на проекте', requiresAuth: true }},
-    {path: '/projectsForUser', component: projectForUser, meta: { title: 'Мои проекты', requiresAuth: true }},
+    {path: '/projectsForUser', name: 'ProjectsForUser', component: projectForUser, meta: { title: 'Мои проекты', requiresAuth: true }},
     {path: "/users", component: user, meta: { title: 'Список пользователей', requiresAuth: true}},
     {path: "/userAddModal", component: userAddModal, meta: { title: 'Добавление пользователя', requiresAuth: true}},
     {path: '/specializations', component: specialization, meta: { title: 'Специализации', requiresAuth: true }},
@@ -23,6 +23,13 @@ const routes = [
     {path: "/home", name: 'home', component: home, meta: { title: 'Новостная страница', requiresAuth: true }},
     {path: '/task/:taskId', component: conversation, name: 'TaskChatPage', props: true, meta: { title: 'Чат с ботом', requiresAuth: true }},
     {path: "/error", component: Error, meta: { title: 'Возникла ошибка' }},
+    {
+        path: '/',
+        redirect: () => {
+            const isAuthenticated = localStorage.getItem("token");
+            return isAuthenticated ? '/home' : '/login';
+        }
+    },
 ]
 
 const router = createRouter({
@@ -33,6 +40,10 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const isAuthenticated = localStorage.getItem("token");
+    if (to.path === "/login" && isAuthenticated) {
+        next("/home");
+        return;
+    }
     if (to.matched.some((route) => route.meta.requiresAuth)) {
         if (!isAuthenticated) {
             next("/login");

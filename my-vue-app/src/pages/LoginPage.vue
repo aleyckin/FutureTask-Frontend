@@ -59,8 +59,8 @@ export default {
         // Сообщаем о логине
         eventBus.emit('login'); // Emit the login event
 
-        // Перенаправляем пользователя на главную страницу или другую защищенную страницу
-        this.$router.push({ name: 'home' });
+        // Перенаправляем пользователя на страницу проектов
+        this.$router.push({ name: 'ProjectsForUser' });
       } catch (error) {
         if (error.response) {
             // Сервер ответил с ошибкой
