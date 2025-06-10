@@ -9,34 +9,20 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav justify-content-center">
+        <ul class="navbar-nav justify-content-center flex-grow-1">
           <li class="nav-item">
             <router-link v-if="role === 'Administrator'" to="/users" class="nav-link">Пользователи</router-link>
           </li>
           <li class="nav-item">
-            <router-link v-if="role === 'Administrator'" to="/projects" class="nav-link">Проекты</router-link>
+            <router-link to="/projects" class="nav-link">Управление проектами</router-link>
           </li>
           <li class="nav-item">
             <router-link to="/projectsForUser" class="nav-link">Мои проекты</router-link>
           </li>
-          <li class="nav-item">
-            <button type="button" class="btn btn-danger ms-3" @click="logout()">Выйти из аккаунта</button>
-          </li>
         </ul>
-        <div class="navbar-text ms-auto d-flex align-items-center">
-          <!-- Кнопка скачивания своего отчёта слева -->
-          <button
-            v-if="token"
-            class="btn btn-outline-secondary btn-sm me-3"
-            @click="downloadUserReport"
-            title="Скачать отчёт по вашим проектам"
-          >
-            📄 Сформировать отчёт
-          </button>
-
-          <!-- Информация о пользователе и роли -->
-          <span v-if="user">Пользователь: <strong>{{ user }}</strong></span>
-          <span v-if="role" class="ms-2">| Роль: <strong>{{ role }}</strong></span>
+        <div class="d-flex align-items-center ms-auto">
+          <span v-if="user" class="navbar-text me-3">Пользователь: <strong>{{ user }}</strong></span>
+          <button type="button" class="btn btn-outline-secondary btn-sm logout-btn" @click="logout()">Выйти</button>
         </div>
       </div>
     </div>
@@ -45,7 +31,6 @@
 
 <script>
 import eventBus from '../eventBus';
-import DataService from '../service/DataService';
 
 export default {
   data() {
@@ -76,24 +61,8 @@ export default {
       this.user = '';
       this.role = '';
       this.$router.push('/login');
-    },
-    async downloadUserReport() {
-     try {
-       // Запросим PDF в виде Blob
-       const blob = await DataService.downloadBlob(`/metrics/ReportForUser`);
-       // Сформируем временную ссылку и имя файла
-       const url = window.URL.createObjectURL(blob);
-       const link = document.createElement('a');
-       link.href = url;
-       link.download = `Report_${this.user}.pdf`;
-       document.body.appendChild(link);
-       link.click();
-       document.body.removeChild(link);
-       window.URL.revokeObjectURL(url);
-     } catch (err) {
-       console.error('Ошибка при скачивании отчёта пользователя:', err);
-     }
-   }
+    }
+
   }
 }
 </script>
@@ -105,6 +74,25 @@ export default {
     top: 0;
     width: 100%;
     z-index: 1000;
+    animation: navbar-fade-in 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes navbar-fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.98);
+        box-shadow: none;
+    }
+    70% {
+        opacity: 1;
+        transform: translateY(5px) scale(1.01);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    }
 }
 
 .navbar-brand {
@@ -136,6 +124,24 @@ export default {
 
 .navbar-text {
     font-size: 1rem;
+}
+
+.logout-btn {
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: 1px solid #adb5bd;
+    background: transparent;
+    color: #495057;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    margin-left: 10px;
+}
+
+.logout-btn:hover, .logout-btn:focus {
+    background: #f8f9fa;
+    color: #dc3545;
+    border-color: #dc3545;
 }
 
 .btn-danger {

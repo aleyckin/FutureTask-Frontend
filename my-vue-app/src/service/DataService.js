@@ -13,7 +13,11 @@ function toJSON(data) {
 }
 
 export default class DataService {
+<<<<<<< HEAD
     static dataUrlPrefix = 'http://localhost:5050/api';
+=======
+    static dataUrlPrefix = 'https://naughtily-sharing-cod.cloudpub.ru/api';
+>>>>>>> origin/develop
 
     // Получаем токен из localStorage
     static getToken() {

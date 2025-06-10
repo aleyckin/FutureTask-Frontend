@@ -4,6 +4,7 @@ module.exports = defineConfig({
         entry: "./src/main.js",
         devServer: {
             hot: true,
+            allowedHosts: "all",
         },
         watch: true,
         watchOptions: {

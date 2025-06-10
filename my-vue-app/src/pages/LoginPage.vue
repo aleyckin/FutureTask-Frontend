@@ -1,30 +1,33 @@
 <template>
   <div class="login-container">
-    <h1>Login</h1>
-    <form @submit.prevent="loginUser">
+    <h1 class="form-title">Вход в систему</h1>
+    <form @submit.prevent="loginUser" class="login-form">
       <div class="form-group">
         <label for="email">Email</label>
         <input
           type="email"
           v-model="loginForm.email"
           id="email"
+          class="form-control"
           required
         />
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">Пароль</label>
         <input
           type="password"
           v-model="loginForm.password"
           id="password"
+          class="form-control"
           required
         />
       </div>
-      <button type="submit" class="btn btn-primary">Login</button>
+      <button type="submit" class="btn btn-primary">Войти</button>
     </form>
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
   </div>
 </template>
+
 
 <script>
 
@@ -56,8 +59,8 @@ export default {
         // Сообщаем о логине
         eventBus.emit('login'); // Emit the login event
 
-        // Перенаправляем пользователя на главную страницу или другую защищенную страницу
-        this.$router.push({ name: 'home' });
+        // Перенаправляем пользователя на страницу проектов
+        this.$router.push({ name: 'ProjectsForUser' });
       } catch (error) {
         if (error.response) {
             // Сервер ответил с ошибкой
@@ -100,52 +103,86 @@ export default {
 .login-container {
   max-width: 400px;
   width: 100%;
-  padding: 20px;
+  padding: 30px 20px;
   border: 1px solid #ccc;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: white;
+  background-color: #fff;
+}
+
+.login-form {
+  width: 100%;
 }
 
 .form-group {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 20px;
+}
+
+label {
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+input.form-control {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-primary {
   width: 100%;
   padding: 12px;
   font-size: 16px;
-  transition: all 0.3s ease;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
 }
 
 .error-message {
-    color: #dc3545;
-    background: #f8d7da;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #f5c6cb;
-    margin-top: 15px;
-    width: 100%;
-    text-align: center;
-    animation: slideIn 0.3s ease-out;
+  color: #dc3545;
+  background: #f8d7da;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #f5c6cb;
+  margin-top: 15px;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
 }
 
 @keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
